@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DevZone – Stories worth reading</title>
+<meta name="description" content="A modern blog with fresh articles every week.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#/"><i></i>DevZone</a>
+  <nav><a href="#/">Home</a><a href="#all">All posts</a><a href="#sub">Subscribe</a></nav>
+  <div class="right"><span id="authbox"></span><button class="ghost" id="theme">🌓</button></div>
+</div></header>
+
+<div class="wrap">
+  <div class="ad" data-ad="header"></div>   <!-- HEADER BANNER -->
+  <main id="app"></main>
+  <div class="ad" data-ad="footer"></div>   <!-- FOOTER BANNER -->
+</div>
+<footer>© <span id="yr"></span> DevZone  </footer>
+
+<div id="popunder"></div> <!-- POP-UNDER / SOCIAL BAR SCRIPT loads here (from config.js) -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

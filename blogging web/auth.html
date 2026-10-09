@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login / Sign Up – DevZone</title><meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+ body{min-height:100vh;display:flex;flex-direction:column;background:radial-gradient(900px 400px at 50% -10%,var(--pill),transparent),var(--bg)}
+ main{flex:1;display:grid;place-items:center;padding:32px 16px}
+ .box{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:32px;box-shadow:0 20px 40px #10182812}
+ .box h1{margin:0 0 4px;font-size:1.6rem;letter-spacing:-.02em}.box p.sub2{margin:0 0 24px;color:var(--muted)}
+ /* animated tab switch */
+ .tabs{position:relative;display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:24px}
+ .tabs button{background:none;border:0;color:var(--muted);box-shadow:none;position:relative;z-index:1;padding:10px}
+ .tabs button.on{color:var(--text)}
+ .ind{position:absolute;top:4px;bottom:4px;left:4px;width:calc(50% - 4px);background:var(--card);border-radius:9px;box-shadow:0 1px 3px #10182826;transition:transform .3s cubic-bezier(.4,0,.2,1)}
+ .tabs.s .ind{transform:translateX(100%)}
+ form{display:none;animation:in .35s ease}form.on{display:block}@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+ label{display:block;font-size:.85rem;font-weight:600;margin:0 0 6px}
+ form input{width:100%;padding:11px 14px;margin-bottom:16px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;font:inherit}
+ form input:focus{outline:2px solid var(--accent);outline-offset:1px}
+ form .btn{width:100%;padding:12px}button[disabled]{opacity:.6;cursor:wait}
+ .alert{display:none;padding:12px 14px;border-radius:10px;font-size:.9rem;margin-bottom:16px}
+ .alert.err{display:block;background:#fef3f2;color:#b42318;border:1px solid #fecdca}
+ .alert.ok{display:block;background:#ecfdf3;color:#067647;border:1px solid #abefc6}
+ .fgt{display:block;text-align:right;margin:-8px 0 16px;font-size:.85rem;font-weight:600;color:var(--accent)}
+ .or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:.8rem;margin:16px 0 20px}.or:before,.or:after{content:"";flex:1;height:1px;background:var(--line)}
+ .gbtn{width:100%;padding:11px;display:flex;align-items:center;justify-content:center;gap:10px}.gbtn b{color:#ea4335;font-size:1.1rem}
+ .back{text-align:center;margin-top:20px;font-size:.9rem}.back a{color:var(--accent);font-weight:600}
+</style></head>
+<body>
+<header class="top"><div class="wrap"><a class="logo" href="index.html"><i></i>DevZone</a><button class="ghost" id="theme">🌓</button></div></header>
+<main><div class="box">
+  <h1 id="ttl">Welcome back</h1><p class="sub2" id="sub">Log in to your DevZone account.</p>
+  <div class="tabs" id="tabs"><span class="ind"></span><button data-t="login" class="on">Login</button><button data-t="signup">Create Account</button></div>
+  <div class="alert" id="msg" role="alert"></div>
+
+  <div id="alt"><button type="button" class="ghost gbtn" id="g"><b>G</b> Continue with Google</button><div class="or">or use email</div></div>
+
+  <form id="login" class="on">
+    <label>Email</label><input id="le" type="email" placeholder="you@example.com" required autocomplete="email">
+    <label>Password</label><input id="lp" type="password" placeholder="••••••••" required autocomplete="current-password">
+    <a href="#" class="fgt" id="fg">Forgot password?</a>
+    <button class="btn">Log in</button>
+  </form>
+
+  <form id="signup">
+    <label>Full name</label><input id="sn" placeholder="Your name" required maxlength="60" autocomplete="name">
+    <label>Email</label><input id="se" type="email" placeholder="you@example.com" required autocomplete="email">
+    <label>Password</label><input id="sp" type="password" placeholder="At least 8 characters" required minlength="8" autocomplete="new-password">
+    <label>Confirm password</label><input id="sc" type="password" placeholder="Repeat password" required autocomplete="new-password">
+    <button class="btn">Create account</button>
+  </form>
+  <form id="reset">
+    <label>Email</label><input id="re" type="email" placeholder="you@example.com" required autocomplete="email">
+    <button class="btn">Send reset link</button>
+    <a href="#" class="fgt" id="rb" style="text-align:center;margin:16px 0 0">← Back to login</a>
+  </form>
+
+  <form id="newpw">
+    <label>New password</label><input id="np" type="password" placeholder="At least 8 characters" required minlength="8" autocomplete="new-password">
+    <label>Confirm new password</label><input id="nc" type="password" placeholder="Repeat password" required autocomplete="new-password">
+    <button class="btn">Update password</button>
+  </form>
+  <div class="back"><a href="index.html">← Back to blog</a></div>
+</div></main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+const db = supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_KEY);
+const $ = s => document.querySelector(s);
+document.documentElement.dataset.theme = localStorage.getItem('theme') || 'light';
+$('#theme').onclick = () => { const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = t; localStorage.setItem('theme', t); };
+
+// ===== Smart routing: admin email -> admin.html, everyone else -> index.html =====
+const isAdmin = u => (u.email || '').toLowerCase() === CFG.ADMIN_EMAIL.toLowerCase();
+const go = u => location.replace(isAdmin(u) ? 'admin.html' : 'index.html');
+
+// Already logged in? Skip the form.
+// A reset-email link logs the user in briefly: show the "new password" form instead of redirecting.
+if (location.hash.includes('type=recovery')) view('newpw');
+else db.auth.getSession().then(({ data }) => data.session && go(data.session.user));
+db.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY') view('newpw'); });
+
+// ===== Tabs =====
+const TXT = {
+  login:  ['Welcome back', 'Log in to your DevZone account.'],
+  signup: ['Create your account', 'Join DevZone to comment and stay updated.'],
+  reset:  ['Reset password', "Enter your email and we'll send you a reset link."],
+  newpw:  ['Set a new password', 'Choose a strong password for your account.']
+};
+function view(n) {
+  const tabbed = n === 'login' || n === 'signup';
+  $('#tabs').classList.toggle('s', n === 'signup');
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === n));
+  ['login', 'signup', 'reset', 'newpw'].forEach(f => $('#' + f).classList.toggle('on', f === n));
+  $('#tabs').style.display = $('#alt').style.display = tabbed ? '' : 'none';
+  $('#ttl').textContent = TXT[n][0]; $('#sub').textContent = TXT[n][1]; show();
+}
+const tab = view;
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => tab(b.dataset.t));
+function show(text, ok) { const m = $('#msg'); m.className = 'alert' + (text ? (ok ? ' ok' : ' err') : ''); m.textContent = text || ''; }
+const busy = (f, v) => { const b = f.querySelector('button'); b.disabled = v; b.dataset.t = b.dataset.t || b.textContent; b.textContent = v ? 'Please wait…' : b.dataset.t; };
+
+// ===== Login =====
+$('#login').onsubmit = async e => {
+  e.preventDefault(); show(); busy(e.target, true);
+  const { data, error } = await db.auth.signInWithPassword({ email: $('#le').value.trim(), password: $('#lp').value });
+  busy(e.target, false);
+  if (error) return show(error.message.includes('Invalid login') ? 'Wrong email or password.' : error.message);
+  go(data.user);
+};
+
+// ===== Sign up (regular visitors; can never become admin unless email matches) =====
+$('#signup').onsubmit = async e => {
+  e.preventDefault(); show();
+  if ($('#sp').value !== $('#sc').value) return show('Passwords do not match.');
+  busy(e.target, true);
+  const { data, error } = await db.auth.signUp({
+    email: $('#se').value.trim(), password: $('#sp').value,
+    options: { data: { full_name: $('#sn').value.trim() }, emailRedirectTo: location.origin + location.pathname.replace('auth.html', 'auth.html') }
+  });
+  busy(e.target, false);
+  if (error) return show(error.message);
+  if (data.session) return go(data.user);          // email confirmation turned off
+  tab('login'); show('Account created! Check your email to confirm, then log in.', true);
+};
+
+// ===== Google login (enable the Google provider in Supabase first) =====
+$('#g').onclick = async () => {
+  const { error } = await db.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
+  if (error) show(error.message);
+};
+
+// ===== Forgot password: send email =====
+$('#fg').onclick = e => { e.preventDefault(); const v = $('#le').value; view('reset'); $('#re').value = v; };
+$('#rb').onclick = e => { e.preventDefault(); view('login'); };
+$('#reset').onsubmit = async e => {
+  e.preventDefault(); show(); busy(e.target, true);
+  const { error } = await db.auth.resetPasswordForEmail($('#re').value.trim(), { redirectTo: location.origin + location.pathname });
+  busy(e.target, false);
+  error ? show(error.message) : show('If that email has an account, a reset link is on its way.', true);
+};
+
+// ===== Set new password (after clicking the email link) =====
+$('#newpw').onsubmit = async e => {
+  e.preventDefault(); show();
+  if ($('#np').value !== $('#nc').value) return show('Passwords do not match.');
+  busy(e.target, true);
+  const { data, error } = await db.auth.updateUser({ password: $('#np').value });
+  busy(e.target, false);
+  if (error) return show(error.message);
+  show('Password updated! Redirecting…', true); setTimeout(() => go(data.user), 1200);
+};
+</script></body></html>

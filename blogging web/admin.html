@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin</title><meta name="robots" content="noindex"><link rel="stylesheet" href="style.css"></head>
+<body><div class="wrap" style="max-width:860px;padding-top:30px">
+<h1>Admin Dashboard</h1>
+
+<!-- Dashboard -->
+<div id="dash" hidden>
+  <p><button id="new">+ New post</button> <button class="ghost" id="lo">Log out</button> <a href="index.html" class="btn ghost">View site</a></p>
+  <div id="list"></div>
+  <form id="form" class="f" hidden>
+    <h2 id="ft">New post</h2>
+    <input id="title" placeholder="Title" required><input id="slug" placeholder="url-slug" required>
+    <input id="cat" placeholder="Category" value="General"><input id="cover" placeholder="Cover image URL">
+    <textarea id="exc" rows="2" placeholder="Short excerpt"></textarea>
+    <textarea id="content" rows="14" placeholder="Content as HTML, e.g. <p>Hello</p><h2>Heading</h2>" required></textarea>
+    <label><input type="checkbox" id="feat" style="width:auto"> Featured</label>
+    <label><input type="checkbox" id="pub" style="width:auto" checked> Published</label><br><br>
+    <button>Save</button> <button type="button" class="ghost" id="cancel">Cancel</button>
+  </form>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+const db = supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_KEY);
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let editId = null, posts = [];
+
+// Guard: must be logged in AND be the admin email, otherwise leave.
+async function init() {
+  const { data } = await db.auth.getSession(), u = data.session?.user;
+  if (!u) return location.replace('auth.html');
+  if (u.email.toLowerCase() !== CFG.ADMIN_EMAIL.toLowerCase()) return location.replace('index.html');
+  $('#dash').hidden = false; refresh();
+}
+$('#lo').onclick = async () => { await db.auth.signOut(); location.replace('index.html'); };
+
+async function refresh() {
+  ({ data: posts = [] } = await db.from('posts').select('*').order('created_at', { ascending: false }));
+  $('#list').innerHTML = posts.map(p => `<div class="cm"><b>${esc(p.title)}</b> <small>${p.published ? 'Published' : 'Draft'}${p.featured ? ' · Featured' : ''}</small><br>
+    <button class="ghost" onclick="edit('${p.id}')">Edit</button> <button class="ghost" onclick="del('${p.id}')">Delete</button></div>`).join('') || '<p class="empty">No posts.</p>';
+}
+function show(p) {
+  editId = p?.id || null; $('#form').hidden = false; $('#ft').textContent = p ? 'Edit post' : 'New post';
+  title.value = p?.title || ''; slug.value = p?.slug || ''; cat.value = p?.category || 'General'; cover.value = p?.cover_url || '';
+  exc.value = p?.excerpt || ''; content.value = p?.content || ''; feat.checked = !!p?.featured; pub.checked = p ? p.published : true;
+}
+const edit = id => show(posts.find(p => p.id === id));
+async function del(id) { if (confirm('Delete this post?')) { await db.from('posts').delete().eq('id', id); refresh(); } }
+$('#new').onclick = () => show(null);
+$('#cancel').onclick = () => $('#form').hidden = true;
+$('#title').oninput = e => { if (!editId) slug.value = e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); };
+$('#form').onsubmit = async e => {
+  e.preventDefault();
+  const row = { title: title.value, slug: slug.value, category: cat.value, cover_url: cover.value, excerpt: exc.value, content: content.value, featured: feat.checked, published: pub.checked };
+  const { error } = editId ? await db.from('posts').update(row).eq('id', editId) : await db.from('posts').insert(row);
+  if (error) return alert(error.message);
+  $('#form').hidden = true; refresh();
+};
+init();
+</script></body></html>
